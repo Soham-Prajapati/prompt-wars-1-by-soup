@@ -10,8 +10,8 @@ class Zone(BaseModel):
     name: str
     type: Literal["gate", "concourse", "restroom", "vendor", "seating", "exit"]
     max_capacity: int
-    beacon_ids: list[str] = []
-    geometry: dict = {}
+    beacon_ids: list[str] = Field(default_factory=list)
+    geometry: dict = Field(default_factory=dict)
 
 
 class ZoneDensitySnapshot(BaseModel):

@@ -13,6 +13,7 @@ def test_health():
     r = client.get("/")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
+    assert "google_cloud" in r.json()
 
 
 def test_get_zone_density():
@@ -119,3 +120,28 @@ def test_faq_search():
     assert r.status_code == 200
     assert "answer" in r.json()
     assert r.json()["confidence"] > 0
+
+
+def test_google_health():
+    r = client.get("/google/health")
+    assert r.status_code == 200
+    data = r.json()
+    assert "gcp_enabled" in data
+    assert "pubsub_topic" in data
+
+
+def test_google_publish_event():
+    r = client.post("/google/publish-event", json={"event_type": "zone_density_update", "zone_id": "Z1"})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["ok"] is True
+    assert data["published"] is True
+    assert data["mode"] in ("mock", "gcp")
+
+
+def test_google_venue_analytics():
+    r = client.get("/google/venues/VENUE_DEMO/analytics")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["venue_id"] == "VENUE_DEMO"
+    assert isinstance(data["rows"], list)

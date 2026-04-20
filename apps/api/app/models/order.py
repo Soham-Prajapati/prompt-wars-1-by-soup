@@ -34,5 +34,5 @@ class QueueSnapshot(BaseModel):
     queue_length: int
     forecast_15min: float
     source: Literal["sensor", "crowd", "pos"]
-    alternative_stall_ids: list[str] = []
+    alternative_stall_ids: list[str] = Field(default_factory=list)
     recorded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

@@ -1,10 +1,12 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, Request
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.zone import ZoneDensitySnapshot
 from app.models.incident import Incident, IncidentCreate, BroadcastRequest
 from app.models.order import Order, OrderCreate, QueueSnapshot
 from app.core.auth import create_access_token, get_current_user, require_admin
 from app.core.rate_limit import check_rate_limit
+from app.core.settings import get_allowed_origins
+from app.services.google_cloud_service import google_cloud_service
 from app.services.gemini_service import (
     generate_dispatch_instruction,
     analyze_cctv_frame,
@@ -23,7 +25,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,12 +40,17 @@ _connections: list[WebSocket] = []
 # ── Health ─────────────────────────────────────────────────────────────────────
 @app.get("/", tags=["health"])
 def root():
-    return {"status": "ok", "service": "StadiumIQ API", "version": "1.0.0"}
+    return {
+        "status": "ok",
+        "service": "StadiumIQ API",
+        "version": "1.0.0",
+        "google_cloud": google_cloud_service.health(),
+    }
 
 
 # ── Zones ──────────────────────────────────────────────────────────────────────
 @app.get("/venues/{venue_id}/zones/density", tags=["crowd"])
-def get_zone_density(venue_id: str):
+def get_zone_density(venue_id: str, _: None = Depends(check_rate_limit)):
     """Real-time density for all zones. Simulated for demo."""
     zones = [
         {"zone_id": f"Z{i}", "density": round(random.uniform(0.1, 0.95), 2),
@@ -58,7 +65,7 @@ def get_zone_density(venue_id: str):
 
 # ── Queues ─────────────────────────────────────────────────────────────────────
 @app.get("/venues/{venue_id}/queues", tags=["queues"])
-def get_queues(venue_id: str):
+def get_queues(venue_id: str, _: None = Depends(check_rate_limit)):
     """All vendor/facility queue estimates."""
     stalls = [
         {"stall_id": f"S{i}", "name": f"Stall {i}", "wait_mins": round(random.uniform(0, 20), 1),
@@ -73,7 +80,7 @@ def get_queues(venue_id: str):
 
 # ── Navigation ─────────────────────────────────────────────────────────────────
 @app.post("/venues/{venue_id}/navigate", tags=["navigation"])
-def navigate(venue_id: str, body: dict):
+def navigate(venue_id: str, body: dict, _: None = Depends(check_rate_limit)):
     """Compute indoor route from src to dst, avoiding dense zones."""
     return {
         "venue_id": venue_id,
@@ -92,7 +99,7 @@ def navigate(venue_id: str, body: dict):
 
 # ── Orders ─────────────────────────────────────────────────────────────────────
 @app.post("/orders", tags=["orders"])
-def create_order(order: OrderCreate):
+def create_order(order: OrderCreate, _: None = Depends(check_rate_limit)):
     """Create a new in-seat food/beverage order."""
     total = sum(float(i.get("price", 0)) for i in order.items)
     new_order = Order(**order.model_dump(), total_amount=total)
@@ -107,7 +114,7 @@ def create_order(order: OrderCreate):
 
 
 @app.get("/orders/{order_id}", tags=["orders"])
-def get_order(order_id: str):
+def get_order(order_id: str, _: None = Depends(check_rate_limit)):
     """Get order status and delivery staff location."""
     order = next((o for o in _orders if o["id"] == order_id), None)
     if not order:
@@ -117,14 +124,14 @@ def get_order(order_id: str):
 
 # ── Incidents ──────────────────────────────────────────────────────────────────
 @app.get("/incidents", tags=["incidents"])
-def list_incidents(venue_id: str | None = None):
+def list_incidents(venue_id: str | None = None, _: None = Depends(check_rate_limit)):
     if venue_id:
         return [i for i in _incidents if i.get("venue_id") == venue_id]
     return _incidents
 
 
 @app.post("/incidents", tags=["incidents"])
-def create_incident(incident: IncidentCreate):
+def create_incident(incident: IncidentCreate, _: None = Depends(check_rate_limit)):
     """Report a fan incident — triggers Gemini analysis in prod."""
     new = Incident(**incident.model_dump())
     _incidents.append(new.model_dump())
@@ -136,7 +143,7 @@ def create_incident(incident: IncidentCreate):
 
 
 @app.patch("/incidents/{incident_id}/status", tags=["incidents"])
-def update_incident_status(incident_id: str, body: dict):
+def update_incident_status(incident_id: str, body: dict, _: None = Depends(check_rate_limit)):
     for inc in _incidents:
         if inc["id"] == incident_id:
             inc["status"] = body.get("status", inc["status"])
@@ -148,7 +155,7 @@ def update_incident_status(incident_id: str, body: dict):
 
 # ── Widget Data ────────────────────────────────────────────────────────────────
 @app.get("/venues/{venue_id}/widget-data", tags=["widgets"])
-def get_widget_data(venue_id: str):
+def get_widget_data(venue_id: str, _: None = Depends(check_rate_limit)):
     """Compact payload (< 2KB) for home screen widget refresh."""
     return {
         "venue_id": venue_id,
@@ -161,7 +168,7 @@ def get_widget_data(venue_id: str):
 
 # ── Admin ──────────────────────────────────────────────────────────────────────
 @app.get("/admin/venues/{venue_id}/dashboard", tags=["admin"])
-def get_dashboard(venue_id: str):
+def get_dashboard(venue_id: str, _: None = Depends(check_rate_limit)):
     """Full ops data: staff positions, incidents, metrics."""
     return {
         "venue_id": venue_id,
@@ -173,7 +180,7 @@ def get_dashboard(venue_id: str):
 
 
 @app.post("/admin/broadcast", tags=["admin"])
-def broadcast(req: BroadcastRequest):
+def broadcast(req: BroadcastRequest, _: None = Depends(check_rate_limit)):
     """Send tiered emergency broadcast to all fans in venue."""
     return {
         "broadcast_id": str(uuid.uuid4()),
@@ -222,7 +229,7 @@ async def order_tracking(websocket: WebSocket, order_id: str):
 
 # ── FAQ ────────────────────────────────────────────────────────────────────────
 @app.get("/venues/{venue_id}/faq", tags=["faq"])
-def faq_search(venue_id: str, q: str = ""):
+def faq_search(venue_id: str, q: str = "", _: None = Depends(check_rate_limit)):
     """Semantic FAQ search (mocked — wires to Vertex AI Matching Engine in prod)."""
     return {
         "query": q,
@@ -234,13 +241,13 @@ def faq_search(venue_id: str, q: str = ""):
 
 # ── POS Webhook ────────────────────────────────────────────────────────────────
 @app.post("/webhooks/pos", tags=["webhooks"])
-def pos_webhook(payload: dict):
+def pos_webhook(payload: dict, _: None = Depends(check_rate_limit)):
     """Receive POS transaction events to update queue snapshots."""
     return {"status": "received", "processed": True}
 
 
 @app.post("/telegram/webhook", tags=["telegram"])
-async def telegram_webhook(payload: dict):
+async def telegram_webhook(payload: dict, _: None = Depends(check_rate_limit)):
     """Telegram Bot API webhook receiver."""
     return {"ok": True}
 
@@ -278,3 +285,26 @@ async def ai_post_event_report(admin: dict = Depends(require_admin)):
     metrics = {"attendance": 45000, "avg_queue_time": 8.5}
     report = await generate_post_event_report(metrics)
     return {"report": report}
+
+
+# ── Google Cloud Integration ───────────────────────────────────────────────────
+@app.get("/google/health", tags=["google"])
+def google_health(_: None = Depends(check_rate_limit)):
+    """Google Cloud configuration and readiness check."""
+    return google_cloud_service.health()
+
+
+@app.post("/google/publish-event", tags=["google"])
+def publish_google_event(payload: dict, _: None = Depends(check_rate_limit)):
+    """
+    Publish arbitrary venue event payload to Pub/Sub.
+    Works in mock mode locally and uses GCP when configured.
+    """
+    result = google_cloud_service.publish_venue_event(payload)
+    return {"ok": True, **result}
+
+
+@app.get("/google/venues/{venue_id}/analytics", tags=["google"])
+def google_venue_analytics(venue_id: str, _: None = Depends(check_rate_limit)):
+    """Fetch venue density aggregates from BigQuery (or mock fallback)."""
+    return google_cloud_service.fetch_zone_analytics(venue_id)
