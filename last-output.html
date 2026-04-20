@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Soupz Output</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#111;color:#eee;font-family:monospace;padding:20px;max-width:1000px;margin:0 auto}
+  h1{color:#2FA7A0;margin-bottom:5px}
+  .ts{color:#666;font-size:11px;margin-bottom:15px}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .tab{background:#1a1a1a;border:1px solid #333;color:#aaa;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:13px}
+  .tab.active{background:#2FA7A0;color:#111;border-color:#2FA7A0;font-weight:bold}
+  .panel{display:none}
+  .panel.active{display:block}
+  .done{color:#4CAF50}
+  pre{background:#1a1a1a;padding:15px;border-radius:8px;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word;font-size:13px;line-height:1.5}
+  .section{margin:20px 0;border-left:3px solid #2FA7A0;padding-left:15px}
+  .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
+  .meta-item{background:#1a1a1a;padding:10px;border-radius:6px}
+  .meta-label{color:#666;font-size:11px;margin-bottom:4px}
+  .meta-value{color:#eee;font-size:15px;font-weight:bold}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:8px}
+  .badge-done{background:#1a3a1a;color:#4CAF50}
+</style>
+</head>
+<body>
+<h1>🍜 Soupz Output</h1>
+<p class="ts">Updated: Monday April 20 2026 10:16 PM — refresh to update</p>
+
+<div class="tabs">
+  <button class="tab active" onclick="showPanel(0)">Antigravity <span class="badge badge-done">done</span></button>
+</div>
+
+<div class="panel active" id="panel-0">
+  <div class="section">
+    <h2>StadiumIQ Admin Dashboard — Sprint 0 Bootstrap</h2>
+  </div>
+  <div class="meta">
+    <div class="meta-item">
+      <div class="meta-label">Files Changed</div>
+      <div class="meta-value">7</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Duration</div>
+      <div class="meta-value">~30 min</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Agent</div>
+      <div class="meta-value">Antigravity</div>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Files Modified</h2>
+    <pre>CREATE  package.json                           (monorepo root, Turborepo workspaces)
+CREATE  turbo.json                              (build pipeline: dev, build, lint)
+CREATE  apps/admin/src/lib/simulator.ts        (BLE zone density simulator — 450 lines)
+CREATE  apps/admin/src/app/globals.css         (dark design system, animations)
+CREATE  apps/admin/src/app/layout.tsx          (root layout, Inter font, SEO meta)
+CREATE  apps/admin/src/app/page.tsx            (full ops dashboard — 400+ lines)
+CREATE  last-output.md                         (this output log)</pre>
+  </div>
+  <div class="section">
+    <h2>Full Raw Output</h2>
+    <pre>## Monorepo Setup
+- Turborepo workspace: apps/* + packages/*
+- Next.js 16.2.4 (Turbopack) bootstrapped in apps/admin
+- Packages installed: recharts, lucide-react, clsx
+
+## Simulator (apps/admin/src/lib/simulator.ts)
+15 zones modeled on D.Y. Patil Stadium, Mumbai:
+  Gates: G1 (North), G2 (East), G3 (South), G4 (West)
+  Concessions: C1 (Stand 7), C2 (Stand 12), C3 (Food Court South), C4 (Premium Bar West)
+  Restrooms: R1 (Block A), R2 (Block B), R3 (Block C)
+  Concourses: K1 (North), K2 (East), K3 (South), K4 (West)
+  Field: S1 (Main Pitch)
+
+Event Phase Cycle (120 ticks x 3s = 6 min demo loop):
+  Pre-match → Ingress → 1st Half → Halftime → 2nd Half → Egress → Post-match
+
+Crowd behavior per phase:
+  Ingress: Gates + Concourses density rises fast
+  Halftime: Concessions + Restrooms spike +0.05 per tick
+  Egress: Exit zones surge
+
+Incident generation: ~1.5% chance per tick on critical zones
+  Types: crowd_crush, medical, fight
+  Gemini Vision mock analysis strings per type
+  Auto-resolve: responding (15s) → resolved (45s)
+
+## Dashboard (apps/admin/src/app/page.tsx)
+Layout: 3-column grid (260px sidebar | flex center | 320px right panel) + 56px topbar + 72px bottom bar
+
+TopBar:
+  - LIVE indicator (green pulse)
+  - Venue: D.Y. Patil Stadium, Mumbai
+  - Metrics: Attendees, Avg Wait, AFS Score, Orders In Flight
+  - Event phase badge
+  - Active alert count (blinking red badge)
+
+Sidebar (Zone Monitor):
+  - All non-seating zones sorted by density desc
+  - Color-coded status dot (green/amber/orange/red)
+  - Critical zones: pulsing ring animation
+  - Selected zone highlighted with colored left border
+
+VenueHeatmap (SVG-based):
+  - Proportional SVG viewBox with zone rectangles
+  - Fill color transitions every 800ms (density-driven)
+  - Critical zones: animated stroke blinking
+  - Density % label inside each zone
+  - Stadium ring background (decorative)
+  - Compass indicator (N/S/E/W)
+
+RightPanel:
+  - Zone Detail: density bar, capacity/occupied stats, wait time, trend
+  - Gemini Incidents feed: type, severity, zone, AI analysis text
+  - Dispatch Staff button (per active incident)
+  - Animated slide-in for new incidents
+
+BottomBar:
+  - Average density bars for: Gates, Concessions, Restrooms, Concourses
+  - Progress bars with color-coded fill
+
+## Server Status
+Dev server running: http://localhost:3000
+Next.js 16.2.4 with Turbopack — ready in 346ms
+Live simulation active — 3s tick rate</pre>
+  </div>
+  <div class="section">
+    <h2>Errors</h2>
+    <pre>NONE</pre>
+  </div>
+</div>
+
+<script>
+function showPanel(i) {
+  document.querySelectorAll('.tab').forEach(function(t,idx){ t.classList.toggle('active', idx===i); });
+  document.querySelectorAll('.panel').forEach(function(p,idx){ p.classList.toggle('active', idx===i); });
+}
+</script>
+</body>
+</html>
