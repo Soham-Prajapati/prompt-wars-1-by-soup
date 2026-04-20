@@ -173,13 +173,16 @@ export class StadiumSimulator {
     const criticalZones = this.zones.filter((z) => z.density > 0.82 && z.type !== "seating");
     if (!criticalZones.length) return;
     const zone = criticalZones[Math.floor(Math.random() * criticalZones.length)];
-    const types: Incident["type"][] = ["crowd_crush", "medical", "fight"];
+    const types: Incident["type"][] = ["crowd_crush", "medical", "fight", "fire", "evacuation"];
     const type = types[Math.floor(Math.random() * types.length)];
-    const analysis = {
+    const analysisMap: Record<Incident["type"], string> = {
       crowd_crush: "Gemini Vision: Detected abnormal density gradient. Crowd compression pattern emerging. Recommend immediate zone evacuation protocol.",
       medical: "Gemini Vision: Individual detected in distress. Surrounding crowd exhibiting response behavior. Medical team dispatch required.",
       fight: "Gemini Vision: Altercation detected between 2-3 individuals. Security intervention recommended. Adjacent crowd moving away.",
-    }[type];
+      fire: "Gemini Vision: Smoke and heat signature anomaly detected near concession zone. Trigger fire response and clear adjacent paths.",
+      evacuation: "Gemini Vision: Multi-zone risk detected. Controlled evacuation route recommendations generated for nearest exits.",
+    };
+    const analysis = analysisMap[type];
 
     const incident: Incident = {
       id: `INC-${Date.now()}`,
