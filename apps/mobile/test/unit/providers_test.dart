@@ -35,7 +35,7 @@ void main() {
       expect(state, isEmpty);
     });
 
-    test('criticalZonesProvider filters zones with density >= 0.85', () {
+    test('criticalZonesProvider filters zones with density >= 0.85', () async {
       final container = ProviderContainer(
         overrides: [
           zoneDensityProvider.overrideWith(() => _FakeZoneDensityNotifier([
@@ -47,13 +47,15 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
+      
+      await container.read(zoneDensityProvider.future);
 
       final critical = container.read(criticalZonesProvider);
       expect(critical.length, 2);
       expect(critical.map((z) => z.zoneId), containsAll(['Z2', 'Z3']));
     });
 
-    test('avgDensityProvider calculates correct average', () {
+    test('avgDensityProvider calculates correct average', () async {
       final zones = [
         _makeZone('Z1', 0.4),
         _makeZone('Z2', 0.6),
@@ -66,6 +68,8 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
+      
+      await container.read(zoneDensityProvider.future);
 
       final avg = container.read(avgDensityProvider);
       expect(avg, closeTo(0.6, 0.01));
