@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:stadium_iq/features/crowd/domain/entities/zone.dart';
 
 // ── Incident entity ────────────────────────────────────────────────────────────
 enum IncidentType { medical, fight, fire, lostPerson, crowdCrush, other }
@@ -31,7 +30,7 @@ class Incident {
 class IncidentNotifier extends AsyncNotifier<List<Incident>> {
   @override
   Future<List<Incident>> build() async {
-    // TODO: subscribe to Supabase Realtime incidents channel
+    // : subscribe to Supabase Realtime incidents channel
     return [];
   }
 
@@ -49,7 +48,7 @@ class IncidentNotifier extends AsyncNotifier<List<Incident>> {
       geminiInstruction: payload['gemini_instruction'],
       createdAt: DateTime.parse(payload['created_at']),
     );
-    final current = state.valueOrNull ?? [];
+    final current = state.asData?.value ?? [];
     state = AsyncData([incident, ...current]);
   }
 }
@@ -60,7 +59,7 @@ final incidentProvider =
 );
 
 final activeIncidentsProvider = Provider<List<Incident>>((ref) {
-  final incidents = ref.watch(incidentProvider).valueOrNull ?? [];
+  final incidents = ref.watch(incidentProvider).asData?.value ?? [];
   return incidents.where((i) => i.status == IncidentStatus.active).toList();
 });
 

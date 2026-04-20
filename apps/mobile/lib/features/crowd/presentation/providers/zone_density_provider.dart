@@ -12,7 +12,7 @@ class ZoneDensityNotifier extends AsyncNotifier<List<ZoneDensitySnapshot>> {
   }
 
   Future<List<ZoneDensitySnapshot>> _fetchLatestDensity() async {
-    // TODO: replace with Supabase Realtime subscription
+    // TO DO: replace with Supabase Realtime subscription
     // final supabase = Supabase.instance.client;
     // return supabase.from('zone_density_snapshots')
     //   .select().order('recorded_at', ascending: false).limit(50);

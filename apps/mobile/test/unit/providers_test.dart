@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:stadium_iq/features/crowd/domain/entities/zone.dart';
 import 'package:stadium_iq/features/crowd/presentation/providers/zone_density_provider.dart';
 import 'package:stadium_iq/features/orders/presentation/providers/order_provider.dart';

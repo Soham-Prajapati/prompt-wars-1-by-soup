@@ -3,6 +3,33 @@
 
 ---
 
+## Live Deployment & Google Services (Implemented)
+
+### Live Cloud Run services
+- Admin Dashboard: `https://stadiumiq-admin-nruxqvvfja-el.a.run.app`
+- API Service: `https://stadiumiq-api-nruxqvvfja-el.a.run.app`
+- Telegram Service: `https://stadiumiq-telegram-nruxqvvfja-el.a.run.app`
+
+### Google services integrated in this submission
+- **Cloud Run:** deployed API, admin web app, and Telegram bot as separate services.
+- **Secret Manager:** runtime secrets for `GEMINI_API_KEY`, `JWT_SECRET_KEY`, `TELEGRAM_BOT_TOKEN`, `GOOGLE_API_KEY`.
+- **Pub/Sub:** event topic `venue-events` for venue event publishing.
+- **BigQuery:** analytics dataset/table `stadiumiq.zone_density_snapshots`.
+- **Gemini API:** AI incident/dispatch/assistant endpoints with safe mock fallback when key is absent.
+- **Cloud Build + Artifact Registry:** source-based build/deploy pipeline for Cloud Run.
+
+### Vertex AI status (important)
+- **Current deployed implementation:** uses Gemini API integrations in backend service flows.
+- **Vertex AI integration:** documented architecture target for forecasting/matching in production scale deployments.
+- **Demo fallback strategy:** mock/simulated data paths are used where full model serving is not yet wired, so the platform remains fully demo-able.
+
+### Security and reliability signals
+- Service-account based runtime permissions (`stadiumiq-runtime`).
+- API key restrictions configured per service usage.
+- Rate-limiting and JWT-based authentication middleware in backend.
+
+---
+
 ## 01 / EXECUTIVE SUMMARY & PROBLEM SPACE
 
 ### 1.1 Core Problem Statement
